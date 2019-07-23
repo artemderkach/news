@@ -1,0 +1,7 @@
+<body>
+    <h2>{{.Title}}</h2>
+    {{range .Items}}
+    <p><h4>{{.Published}} <a href="{{.Link}}">{{.Title}}</a></h4></p>
+    {{.Description}}<br><br>
+    {{end}}
+</body>
