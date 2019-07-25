@@ -25,27 +25,34 @@ func news(w http.ResponseWriter, r *http.Request) {
 
 	f, err := os.Open("./news.html")
 	if err != nil {
-		err = errors.Wrap(err, "error opening html template")
-		fmt.Println(err)
-		w.Write([]byte(err.Error()))
+		sendError(w, errors.Wrap(err, "error opening html template"))
 		return
 	}
 
 	body, err := ioutil.ReadAll(f)
 	if err != nil {
-		err = errors.Wrap(err, "error reading html tempalte file")
-		fmt.Println(err)
-		w.Write([]byte(err.Error()))
+		sendError(w, errors.Wrap(err, "error reading html tempalte file"))
 		return
 	}
 
 	t, err := template.New("").Parse(string(body))
 	if err != nil {
-		err = errors.Wrap(err, "error parsing tempalte")
-		fmt.Println(err)
-		w.Write([]byte(err.Error()))
+		sendError(w, errors.Wrap(err, "error parsing tempalte"))
 		return
 	}
 
-	t.Execute(w, feed)
+	err = t.Execute(w, feed)
+	if err != nil {
+		err = errors.Wrap(err, "error applying parsed tempalte")
+		fmt.Println(err)
+	}
+}
+
+func sendError(w http.ResponseWriter, err error) {
+	fmt.Println(err)
+	_, err = w.Write([]byte(err.Error()))
+	if err != nil {
+		err = errors.Wrap(err, "error sending response")
+		fmt.Println(err)
+	}
 }
