@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -59,12 +60,26 @@ func news(w http.ResponseWriter, r *http.Request) {
 
 func changeDateFormat(feed *gofeed.Feed) error {
 	// Mon, 05 Aug 2019 21:34:31 +0000
-	layout := "Mon, 02 Jan 2006 15:04:05 -0700"
-	t, err := time.Parse(layout, feed.Published)
-	if err != nil {
-		return errors.Wrap(err, "error parsing time")
+	getNewFormat := func(date string) (string, error) {
+		layout := "Mon, 02 Jan 2006 15:04:05 -0700"
+		t, err := time.Parse(layout, date)
+		if err != nil {
+			return date, errors.Wrap(err, "error parsing time")
+		}
+		return fmt.Sprintf("%02d.%02d.%s", t.Day(), t.Month(), strconv.Itoa(t.Year())[2:]), nil
 	}
-	fmt.Printf("%01d.%d.%v\n", t.Year(), t.Month(), t.Day())
+
+	var err error
+	feed.Published, err = getNewFormat(feed.Published)
+	if err != nil {
+		return errors.Wrap(err, "error formattig date")
+	}
+	for _, item := range feed.Items {
+		item.Published, err = getNewFormat(item.Published)
+		if err != nil {
+			return errors.Wrap(err, "error formattig date")
+		}
+	}
 
 	return nil
 }
