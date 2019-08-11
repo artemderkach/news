@@ -2,21 +2,35 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"text/template"
 	"time"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
 )
 
-// some comments
-// blah
-// blah
+type CustomItem struct {
+	GlobalTitle string
+	Item        *gofeed.Item
+}
+
+type CustomFeed struct {
+	Items []*CustomItem
+}
+
+// urls represents path with sites rss feeds
+var urls []string = []string{
+	"https://news.radio-t.com/rss",
+	"https://news.ycombinator.com/rss",
+}
+
+const layout string = "Mon, 2 Jan 2006 15:04:05 -0700"
+
 func main() {
 	http.HandleFunc("/", news)
 	fmt.Println("listenign on localhost:8080")
@@ -24,9 +38,7 @@ func main() {
 }
 
 func news(w http.ResponseWriter, r *http.Request) {
-	fp := gofeed.NewParser()
-	feed, _ := fp.ParseURL("https://news.radio-t.com/rss")
-
+	// create template form .html file
 	f, err := os.Open("./news.html")
 	if err != nil {
 		sendError(w, errors.Wrap(err, "error opening html template"))
@@ -45,41 +57,71 @@ func news(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = changeDateFormat(feed)
-	if err != nil {
-		err = errors.Wrap(err, "error changing date format")
-		fmt.Println(err)
+	// put all data from urls to custom feed struct
+	customFeed := &CustomFeed{}
+	fp := gofeed.NewParser()
+	for _, url := range urls {
+		feed, err := fp.ParseURL(url)
+		if err != nil {
+			fmt.Println(errors.Wrap(err, "error retrieving rss data"))
+			continue
+		}
+
+		for _, item := range feed.Items {
+			customItem := &CustomItem{
+				GlobalTitle: feed.Title,
+				Item:        item,
+			}
+			customItem.GlobalTitle = feed.Title
+			customFeed.Items = append(customFeed.Items, customItem)
+		}
 	}
 
-	err = t.Execute(w, feed)
+	orderByDate(customFeed)
+
+	for _, customItem := range customFeed.Items {
+		err = changeDateFormat(customItem.Item)
+		if err != nil {
+			sendError(w, errors.Wrap(err, "error changing date format"))
+			return
+		}
+	}
+
+	err = t.Execute(w, customFeed.Items)
 	if err != nil {
-		err = errors.Wrap(err, "error applying parsed tempalte")
-		fmt.Println(err)
+		sendError(w, errors.Wrap(err, "error applying parsed tempalte"))
+		return
 	}
 }
 
-func changeDateFormat(feed *gofeed.Feed) error {
-	// Mon, 05 Aug 2019 21:34:31 +0000
-	getNewFormat := func(date string) (string, error) {
-		layout := "Mon, 02 Jan 2006 15:04:05 -0700"
-		t, err := time.Parse(layout, date)
-		if err != nil {
-			return date, errors.Wrap(err, "error parsing time")
-		}
-		return fmt.Sprintf("%02d.%02d.%s", t.Day(), t.Month(), strconv.Itoa(t.Year())[2:]), nil
-	}
+func orderByDate(feed *CustomFeed) {
+	for i := 0; i < len(feed.Items)-1; i += 1 {
+		for j := 0; j < len(feed.Items)-1-i; j += 1 {
+			t1, err := time.Parse(layout, feed.Items[j].Item.Published)
+			if err != nil {
+				fmt.Println(errors.Wrapf(err, "error parsing time %s", feed.Items[j].Item.Published))
+				continue
+			}
+			t2, err := time.Parse(layout, feed.Items[j+1].Item.Published)
+			if err != nil {
+				fmt.Println(errors.Wrapf(err, "error parsing time %s", feed.Items[j+1].Item.Published))
+				continue
+			}
 
-	var err error
-	feed.Published, err = getNewFormat(feed.Published)
-	if err != nil {
-		return errors.Wrap(err, "error formattig date")
-	}
-	for _, item := range feed.Items {
-		item.Published, err = getNewFormat(item.Published)
-		if err != nil {
-			return errors.Wrap(err, "error formattig date")
+			if t1.Before(t2) {
+				feed.Items[j], feed.Items[j+1] = feed.Items[j+1], feed.Items[j]
+			}
 		}
 	}
+}
+
+// changeDateFormat changes date format to setisfy simpler rule "DD.MM"
+func changeDateFormat(item *gofeed.Item) error {
+	t, err := time.Parse(layout, item.Published)
+	if err != nil {
+		errors.Wrap(err, "error parsing time")
+	}
+	item.Published = fmt.Sprintf("%02d.%02d.%s", t.Day(), t.Month(), strconv.Itoa(t.Year())[2:])
 
 	return nil
 }

@@ -1,6 +1,5 @@
 <body>
-{{.Title}}
-{{range .Items}}
-<p>{{.Published}} <a href="{{.Link}}">{{.Title}}</a>
+{{range .}}
+	<p>{{.GlobalTitle}} {{.Item.Published}} <a href="{{.Item.Link}}">{{.Item.Title}}</a>
 {{end}}
 </body>
