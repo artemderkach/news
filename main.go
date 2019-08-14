@@ -14,11 +14,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+// CustomItem just a bit expanded version of default *gofeed.Item
 type CustomItem struct {
-	GlobalTitle string
+	GlobalTitle string // gofeed.Feed.Title
 	Item        *gofeed.Item
 }
 
+// CustomFeed is needed for storing all Items(from different urls) is one place.
+// in case of default feed we will have []*gofeed.Fead, in thes case there is no possibility
+// to order all items in all feeds by name.
+// CustomFeed struct solve the problem of storing items for futere filtering by date
 type CustomFeed struct {
 	Items []*CustomItem
 }
