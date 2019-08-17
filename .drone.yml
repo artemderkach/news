@@ -1,0 +1,9 @@
+steps:
+- name: build  
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_name
+    password:
+      from_secret: docker_password
+    repo: mindrot/news
