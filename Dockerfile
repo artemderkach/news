@@ -7,7 +7,7 @@ COPY . .
 ENV CGO_ENABLED=0
 ENV GOFLAGS "-mod=vendor"
 
-RUN go test -v ./...
+RUN go test ./...
 RUN go build 
 
 FROM alpine:3.10
