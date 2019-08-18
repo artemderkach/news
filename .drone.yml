@@ -13,6 +13,9 @@ steps:
 
 - name: scp
   image: appleboy/drone-scp
+  environment:
+    key:
+      from_secret: ssh_key
   settings:
     host: 68.183.210.229
     port: 22
