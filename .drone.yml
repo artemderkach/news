@@ -21,6 +21,10 @@ steps:
     target: /srv/news
     source: /drone/src/mind-rot
     #/github.com/mind-rot/news/docker-compose.yml
+  commands:
+  - ls
+  - pwd
+  - ls /drone
 
 - name: deploy
   image: appleboy/drone-ssh
