@@ -16,10 +16,10 @@ steps:
   settings:
     host: 68.183.210.229
     port: 22
-    key:
+    ssh_key:
       from_secret: ssh_key
     target: /srv/news
-    source: /drone/src
+    source: /drone/src/mind-rot
     #/github.com/mind-rot/news/docker-compose.yml
 
 - name: deploy
