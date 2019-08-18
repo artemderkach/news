@@ -2,14 +2,14 @@ kind: pipeline
 name: default
 
 steps:
-  # - name: build  
-  #   image: plugins/docker
-  #   settings:
-  #     username:
-  #       from_secret: docker_name
-  #     password:
-  #       from_secret: docker_password
-  #     repo: mindrot/news
+- name: build  
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_name
+    password:
+      from_secret: docker_password
+    repo: mindrot/news
 
 - name: scp
   image: appleboy/drone-scp
@@ -21,7 +21,6 @@ steps:
       from_secret: ssh_key
     target: /srv/news
     source: ./docker-compose.yml
- # /github.com/mind-rot/news/docker-compose.yml
 
 - name: deploy
   image: appleboy/drone-ssh
