@@ -11,20 +11,26 @@ steps:
   #       from_secret: docker_password
   #     repo: mindrot/news
 
-  #- name: scp
-  #  image: appleboy/drone-scp
-  #  settings:
-  #    host: 68.183.210.229
-  #    port: 22
-  #    key:
-  #      from_secret: ssh_key
-  #    target: /srv/news
-  #    source: ./docker-compose.yml
-    # /github.com/mind-rot/news/docker-compose.yml
-    #  commands:
-    #  - ls
-    #  - pwd
-    #  - ls /drone
+- name: scp
+  image: appleboy/drone-scp
+  settings:
+    host: 68.183.210.229
+    port: 22
+    key:
+      from_secret: ssh_key
+    KEY:
+      from_secret: ssh_key
+    ssh_key:
+      from_secret: ssh_key
+    SSH_KEY:
+      from_secret: ssh_key
+    target: /srv/news
+    source: ./docker-compose.yml
+ # /github.com/mind-rot/news/docker-compose.yml
+ #  commands:
+ #  - ls
+ #  - pwd
+ #  - ls /drone
 
 - name: deploy
   image: appleboy/drone-ssh
